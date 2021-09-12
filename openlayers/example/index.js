@@ -11,6 +11,9 @@ var southElement = null;
 var eastElement = null;
 var vertElement = null;
 
+var rotateView = false;
+var rotateViewElement = null;
+
 var selectedSurvey = {
   survey: null,
   get value() {
@@ -61,13 +64,21 @@ function tileUrlFunction(tileCoord) {
  */
 function tileLoadFunction(imageTile, src) {
   var img = imageTile.getImage();
+  //console.log("loading tile")
 
   fetchImageData(src)
     .then(function(imgData) {
       if (imgData && layerType !== 'Vert') {
-        rotateTile(imgData, TILE_SIZES[layerType], HEADINGS[layerType])
+        var tileCoord = imageTile.getTileCoord()
+        rotateTile(imgData, TILE_SIZES[layerType], HEADINGS[layerType], tileCoord)
           .then(function(rotatedImgData) {
             img.src = rotatedImgData || '';
+            
+            var z = tileCoord[0];
+            var x = tileCoord[1];
+            var y = tileCoord[2];
+            //img.title = '(' + x + ', ' + y + ')'
+            console.log('(' + x + ', ' + y + ')[' + z + ']');
           });
       }
 
@@ -82,9 +93,18 @@ function createView(zoom, center) {
   zoom = zoom || ZOOM;
   center = center || CENTER;
 
+  var rorationDeg = rotateView ? HEADINGS[layerType] : 0
+
+  console.log("rotate" + rorationDeg)
+
+
   return new ol.View({
     projection: PROJECTIONS[layerType],
-    rotation: toViewRotation(HEADINGS[layerType]),
+
+    //TODO: DJC I disabled the final image rotation to see how the tiles are lined up before
+    //rotation: toViewRotation(HEADINGS[layerType]),
+    rotation: toViewRotation(rorationDeg),
+
     center: ol.proj.fromLonLat(center, PROJECTIONS[layerType]),
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
@@ -271,6 +291,8 @@ function initUiElements() {
   southElement = document.querySelector('#southElementId');
   eastElement = document.querySelector('#eastElementId');
   vertElement = document.querySelector('#vertElementId');
+
+  rotateViewElement = document.querySelector('#rotateElementId');
 }
 
 /**
@@ -298,6 +320,13 @@ function addEventListeners() {
         refreshView();
       });
     });
+
+
+  // Adds "onChange" listener to the rotation checkbox
+  rotateViewElement.addEventListener('change', function(evt) {
+    rotateView = evt.target.checked
+    refreshView();
+  });
 }
 
 function initMap() {

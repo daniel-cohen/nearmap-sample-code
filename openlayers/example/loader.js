@@ -30,7 +30,7 @@ function loadImage(data) {
   });
 }
 
-function rotateImage(ctx, img, tileWidth, tileHeight, heading) {
+function rotateImage(ctx, img, tileWidth, tileHeight, heading, tileCoord) {
   var rotation = degreesToRadians(heading);
 
   ctx.save();
@@ -50,6 +50,26 @@ function rotateImage(ctx, img, tileWidth, tileHeight, heading) {
   }
 
   ctx.restore();
+
+  ctx.save();
+  ctx.translate(tileWidth / 2, tileHeight / 2);
+  //------------------------------------------------------
+  // Write this before we do the rotation:
+  var z = tileCoord[0];
+  var x = tileCoord[1];
+  var y = tileCoord[2];
+  //console.log('(' + x + ', ' + y + ')');
+  // //DJC test:
+   ctx.font = '20px serif';
+   ctx.textAlign = "center" 
+   ctx.fillText('(' + x + ',' + y + ')', 0, 0);
+  //------------------------------------------------------
+  ctx.restore();
+
+  // Draw a rect on to so we see the borders of the tiles:
+  void ctx.rect(0, 0, tileWidth, tileHeight);
+  ctx.stroke();
+
 }
 
 function createCanvas(width, height) {
@@ -60,7 +80,7 @@ function createCanvas(width, height) {
   return [canvas, canvas.getContext('2d')];
 }
 
-function rotateTile(data, tileDims, heading) {
+function rotateTile(data, tileDims, heading, tileCoord) {
   var tileWidth = tileDims[0];
   var tileHeight = tileDims[1];
   var canvasAndCtx = createCanvas(tileWidth, tileHeight);
@@ -69,7 +89,7 @@ function rotateTile(data, tileDims, heading) {
 
   return loadImage(data)
     .then(function(img) {
-      rotateImage(ctx, img, tileWidth, tileHeight, heading);
+      rotateImage(ctx, img, tileWidth, tileHeight, heading, tileCoord);
 
       return canvas.toDataURL();
     });
